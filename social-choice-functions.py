@@ -27,6 +27,9 @@ class Profile(object):
             for numVotes, ballot in self.pairs:
                 self.votesPerMayor[ballot[0]] += numVotes
             return self.votesPerMayor[mayor]
+    def doesParetoDominate(self, mayor1, mayor2):
+        return all(ballot.index(mayor1) < ballot.index(mayor2)
+                   for _, ballot in self.pairs)
 
     ## simple scores
     def copelandScore(self, mayor):
@@ -87,10 +90,6 @@ profile2=Profile({(101,(2,1,0)),(100,(0,2,1))})
 profile3=Profile({(40,(0,1,2)),(28,(1,2,0)),(32,(2,1,0))})
 profile4=Profile({(15,(1,2,4,0,3)),(29,(0,1,3,4,2)),(42,(2,1,3,0,4)),(43,(4,1,3,2,0)),(45,(1,2,3,0,4)),(52,(3,0,1,2,4)),(53,(0,2,1,3,4)),(59,(1,2,3,4,0)),(60,(1,4,3,0,2)),(87,(1,4,0,2,3))})
 profile5=Profile({(20,(0,1,2)),(20,(1,2,0)),(20,(2,0,1))})
+profile6=Profile({(10,(0,1,2)),(10,(0,2,1))})
 
-#def doesParetoDominate(profile, candidate1, candidate2):
-#    # assumes all pairs in profile have at least one voter
-#    # todo: test if this works
-#    return all(ballot.index(candidate1) < ballot.index(candidate2)
-#               for _, ballot in profile)
-#
+
