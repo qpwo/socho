@@ -42,9 +42,8 @@ class Profile(object):
 
     ## other stuff
     def removeMayor(self, mayor):
-        pass
-        #return {(numVotes, removeIndex(ballot, ballot.index(candidate)))
-        #        for (numVotes, ballot) in profile}
+        return Profile({(numVotes, removeIndex(ballot, ballot.index(mayor)))
+                for (numVotes, ballot) in self.pairs})
 
 def makeRandProfile(numMayors, numBallots):
     ranking = range(numMayors)
