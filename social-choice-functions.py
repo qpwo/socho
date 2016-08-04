@@ -39,6 +39,17 @@ class Profile(object):
     def simpsonScore(self, mayor):
         return min(self.netPreference(mayor, mayor2)
                    for mayor2 in self.mayors - {mayor})
+    def singleTransferableVote(self):
+        votesPerMayor = {mayor: 0 for mayor in self.mayors}
+        for numVotes, ballot in self.pairs:
+            votesPerMayor[ballot[0]] += numVotes
+        worstMayor, worstNumVotes = None, float("inf")
+        for mayor, numVotes in votesPerMayor.items():
+            if numVotes > self.totalVotes//2:
+                return mayor
+            if numVotes < worstNumVotes:
+                worstMayor, worstNumVotes = mayor, numVotes
+        return self.removeMayor(worstMayor).singleTransferableVote()
 
     ## other stuff
     def removeMayor(self, mayor):
@@ -70,18 +81,3 @@ profile5=Profile({(20,(0,1,2)),(20,(1,2,0)),(20,(2,0,1))})
 #    return all(ballot.index(candidate1) < ballot.index(candidate2)
 #               for _, ballot in profile)
 #
-#def singleTransferableVote(profile):
-#    # messy. I think it works.
-#    majority = sum(numVotes for numVotes, _ in profile) // 2 + 1
-#    _, ballot = next(iter(profile))
-#    votesPerCandidate = {candidate: 0 for candidate in ballot}
-#    for numVotes, ballot in profile:
-#        votesPerCandidate[ballot[0]] += numVotes
-#
-#    worstCandidate, worstNumVotes = None, float("inf")
-#    for candidate, numVotes in votesPerCandidate.items():
-#        if numVotes >= majority:
-#            return candidate
-#        if numVotes < worstNumVotes:
-#            worstCandidate, worstNumVotes = candidate, numVotes
-#    return singleTransferableVote(removeCandidate(profile, worstCandidate))
