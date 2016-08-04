@@ -1,17 +1,23 @@
 import random
 
 class Profile(object):
-    # it would save computation if I made graphs once at the start
-    # todo: combine pairs that have same ballot instead of destroying one
+    # todo: combine identical pairs instead of destroying one
     def __init__(self, pairs):
         self.pairs = pairs
         self.mayors = set(next(iter(pairs))[1])
         self.totalVotes = sum(numVotes for (numVotes, _) in pairs)
+        self.netPreferenceGraph = {mayor: dict() for mayor in self.mayors}
 
     def netPreference(self, mayor1, mayor2):
-        return sum(numVotes
-                   * sign(ballot.index(mayor2) - ballot.index(mayor1))
-                   for (numVotes, ballot) in self.pairs)
+        try:
+            return self.netPreferenceGraph[mayor1][mayor2]
+        except KeyError:
+            answer = sum(numVotes
+                         * sign(ballot.index(mayor2) - ballot.index(mayor1))
+                         for (numVotes, ballot) in self.pairs)
+            self.netPreferenceGraph[mayor1][mayor2] = answer
+            self.netPreferenceGraph[mayor2][mayor1] = -answer
+            return answer
 
     ## simple scores
     def copelandScore(self, mayor):
@@ -40,13 +46,13 @@ class Profile(object):
         #return {(numVotes, removeIndex(ballot, ballot.index(candidate)))
         #        for (numVotes, ballot) in profile}
 
-def makeRandProfile():
-    ranking = range(5)
+def makeRandProfile(numMayors, numBallots):
+    ranking = range(numMayors)
     pairs = set()
-    for i in xrange(10):
+    for i in xrange(numBallots):
         random.shuffle(ranking)
         pairs.add((random.randint(1,100),tuple(ranking)))
-    return Profile(set(ranking), pairs)
+    return Profile(pairs)
 
 def sign(n):
     return 1 if n > 0 else (-1 if n < 0 else 0)
