@@ -7,6 +7,7 @@ class Profile(object):
         self.mayors = set(next(iter(pairs))[1])
         self.totalVotes = sum(numVotes for (numVotes, _) in pairs)
         self.netPreferenceGraph = {mayor: dict() for mayor in self.mayors}
+        self.votesPerMayor = None
 
     def netPreference(self, mayor1, mayor2):
         try:
@@ -18,6 +19,14 @@ class Profile(object):
             self.netPreferenceGraph[mayor1][mayor2] = answer
             self.netPreferenceGraph[mayor2][mayor1] = -answer
             return answer
+    def numTopVotes(self, mayor):
+        if self.votesPerMayor is not None:
+            return self.votesPerMayor[mayor]
+        else:
+            self.votesPerMayor = {mayor: 0 for mayor in self.mayors}
+            for numVotes, ballot in self.pairs:
+                self.votesPerMayor[ballot[0]] += numVotes
+            return self.votesPerMayor[mayor]
 
     ## simple scores
     def copelandScore(self, mayor):
@@ -30,15 +39,19 @@ class Profile(object):
         topScore = len(self.mayors) - 1
         return sum(numVotes * (topScore - ballot.index(mayor))
                    for numVotes, ballot in self.pairs)
+    def simpsonScore(self, mayor):
+        return min(self.netPreference(mayor, mayor2)
+                   for mayor2 in self.mayors - {mayor})
 
-    ## condorcet consistent scores and SCF's
+    ## a few social choice functions
+    def pluralityRule(self):
+        return max(self.mayors, key=self.numTopVotes)
+    def smallestRule(self):
+        return min(self.mayors, key=self.numTopVotes)
     def condorcetWinners(self):
         return {mayor for mayor in self.mayors
                 if all(self.netPreference(mayor, mayor2)>=0
                        for mayor2 in self.mayors)}
-    def simpsonScore(self, mayor):
-        return min(self.netPreference(mayor, mayor2)
-                   for mayor2 in self.mayors - {mayor})
     def singleTransferableVote(self):
         votesPerMayor = {mayor: 0 for mayor in self.mayors}
         for numVotes, ballot in self.pairs:
