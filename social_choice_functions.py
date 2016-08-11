@@ -13,6 +13,7 @@ class Profile(object):
         self.netPreferenceGraph = {mayor: dict() for mayor in self.mayors}
         self.votesPerMayor = None
 
+    ## mayor comparisons
     def netPreference(self, mayor1, mayor2):
         try:
             return self.netPreferenceGraph[mayor1][mayor2]
@@ -23,7 +24,12 @@ class Profile(object):
             self.netPreferenceGraph[mayor1][mayor2] = answer
             self.netPreferenceGraph[mayor2][mayor1] = -answer
             return answer
-    def numTopVotes(self, mayor):
+    def doesParetoDominate(self, mayor1, mayor2):
+        return all(ballot.index(mayor1) < ballot.index(mayor2)
+                   for _, ballot in self.pairs)
+
+    ## simple scores
+    def pluralityScore(self, mayor):
         if self.votesPerMayor is not None:
             return self.votesPerMayor[mayor]
         else:
@@ -31,11 +37,6 @@ class Profile(object):
             for numVotes, ballot in self.pairs:
                 self.votesPerMayor[ballot[0]] += numVotes
             return self.votesPerMayor[mayor]
-    def doesParetoDominate(self, mayor1, mayor2):
-        return all(ballot.index(mayor1) < ballot.index(mayor2)
-                   for _, ballot in self.pairs)
-
-    ## simple scores
     def copelandScore(self, mayor):
         return sum(sign(self.netPreference(mayor, mayor2))
                    for mayor2 in self.mayors)
@@ -50,11 +51,11 @@ class Profile(object):
         return min(self.netPreference(mayor, mayor2)
                    for mayor2 in self.mayors - {mayor})
 
-    ## a few social choice functions
+    ## social choice functions
     def pluralityRule(self):
-        return max(self.mayors, key=self.numTopVotes)
+        return max(self.mayors, key=self.pluralityScore)
     def smallestRule(self):
-        return min(self.mayors, key=self.numTopVotes)
+        return min(self.mayors, key=self.pluralityScore)
     def condorcetWinners(self):
         return {mayor for mayor in self.mayors
                 if all(self.netPreference(mayor, mayor2)>=0
