@@ -1,129 +1,411 @@
-# Luke Miles, August 2016
-# a python implementation of some ideas in chapter 2 of the book Computational Choice
+"""A Python implementation of some ideas in Chapter 2 of the book
+Computational Choice
 
-from __future__ import division
-import random
+Authors:
+Bernardo Trevizan, September 2017
+Luke Miles, August 2016
+Rodrigo Augusto Scheller Boos, May 2017
 
-class Profile(object):
-    # todo: combine identical pairs instead of destroying one
+For more information:
+https://github.com/btrevizan/pySCF
+"""
+import math
+import copy
+
+
+class Profile():
+    """A profile is a set of (number of votes, ballot) pairs where a 
+    ballot is some ordering of the candidates. 
+
+    For example:
+    collectedVotes = Profile({(40,(0,1,2)),(28,(1,2,0)),(32,(2,1,0))})
+
+    That means 40 people like candidate 0 most, then candidate 1 middle, 
+    and hate candidate 2. 28 people like candidate 1 the most and so on.
+
+    Properties:
+        pairs -- set of (number of votes, ballot)
+        mayors -- mayors in ballots
+        total_votes -- total number of votes
+        net_preference_graph -- represents the preference net
+        votes_per_mayor -- total votes for each mayor
+    """
 
     def __init__(self, pairs):
+        """Set the properties.
+        
+        Keyword arguments:
+            pairs -- a set of votes and mayors
+        """
+        # Set the pairs
         self.pairs = pairs
-        self.mayors = set(next(iter(pairs))[1])
-        self.totalVotes = sum(numVotes for (numVotes, _) in pairs)
-        self.netPreferenceGraph = {mayor: dict() for mayor in self.mayors}
-        self.votesPerMayor = None
 
-    ## mayor comparisons
-    def netPreference(self, mayor1, mayor2):
-        try:
-            return self.netPreferenceGraph[mayor1][mayor2]
-        except KeyError:
-            answer = sum(numVotes
-                         * sign(ballot.index(mayor2) - ballot.index(mayor1))
-                         for (numVotes, ballot) in self.pairs)
-            self.netPreferenceGraph[mayor1][mayor2] = answer
-            self.netPreferenceGraph[mayor2][mayor1] = -answer
-            return answer
-    def doesParetoDominate(self, mayor1, mayor2):
-        return all(ballot.index(mayor1) < ballot.index(mayor2)
-                   for _, ballot in self.pairs)
+        # Get the mayors from pairs
+        # iter -- transform the set into an iterable
+        it = iter(pairs)
 
-    ## simple scores
-    def copelandScore(self, mayor):
-        return sum(sign(self.netPreference(mayor, mayor2))
-                   for mayor2 in self.mayors)
-    def symmetricBordaScore(self, mayor):
-        return sum(self.netPreference(mayor, mayor2)
-                   for mayor2 in self.mayors)
-    def bordaScore(self, mayor):
-        topScore = len(self.mayors) - 1
-        return sum(numVotes * (topScore - ballot.index(mayor))
-                   for numVotes, ballot in self.pairs)
-    def simpsonScore(self, mayor):
-        return min(self.netPreference(mayor, mayor2)
-                   for mayor2 in self.mayors - {mayor})
-    def pluralityScore(self, mayor):
-        if self.votesPerMayor is not None:
-            return self.votesPerMayor[mayor]
-        else:
-            self.votesPerMayor = {mayor: 0 for mayor in self.mayors}
-            for numVotes, ballot in self.pairs:
-                self.votesPerMayor[ballot[0]] += numVotes
-            return self.votesPerMayor[mayor]
+        # next -- get the next from the iterable
+        pair = next(it)
 
-    ## social choice functions
-    def scoreWinners(self, scoreFunction):
-        return set(maxes(self.mayors, key=scoreFunction))
-    def condorcetWinners(self):
-        return {mayor for mayor in self.mayors
-                if all(self.netPreference(mayor, mayor2)>=0
-                       for mayor2 in self.mayors)}
-    def singleTransferableVote(self):
-        votesPerMayor = {mayor: 0 for mayor in self.mayors}
-        for numVotes, ballot in self.pairs:
-            votesPerMayor[ballot[0]] += numVotes
-        worstMayor, worstNumVotes = None, float("inf")
-        for mayor, numVotes in votesPerMayor.items():
-            if numVotes > self.totalVotes//2:
-                return {mayor}
-            if numVotes < worstNumVotes:
-                worstMayor, worstNumVotes = mayor, numVotes
-        return self.removeMayor(worstMayor).singleTransferableVote()
-    def sequentialMajorityComparison(self):
-        orderedMayors = iter(self.mayors)
-        lastWinner = orderedMayors.next()
-        for mayor in orderedMayors:
-            print "checking mayor", mayor
-            if self.netPreference(mayor, lastWinner) > 0:
-                lastWinner = mayor
-            print "current winner is", lastWinner
-        return lastWinner
-    def baldwinRule(self):
-        if len(self.mayors) == 1:
-            return self.mayors
-        worstMayor = min(self.mayors, key=self.bordaScore)
-        return self.removeMayor(worstMayor).baldwinRule()
-    def nansonRule(self):
-        if len(self.mayors) == 1:
-            return self.mayors
-        bordaScores = {mayor: self.bordaScore(mayor) for mayor in self.mayors}
-        averageBordaScore = sum(bordaScores.values()) / len(self.mayors)
-        badMayors = {mayor for mayor in self.mayors
-                     if bordaScores[mayor] < averageBordaScore}
-        if not badMayors:
-            return self.mayors
-        nextProfile = self
-        for mayor in badMayors:
-            nextProfile = nextProfile.removeMayor(mayor)
-        return nextProfile.nansonRule()
+        # [1] -- mayors' index ([0] is #votes index)
+        mayors = pair[1]
 
+        # set -- convert to a set
+        self.mayors = set(mayors)
 
-    ## other stuff
-    def removeMayor(self, mayor):
-        return Profile({(numVotes, removeIndex(ballot, ballot.index(mayor)))
-                for (numVotes, ballot) in self.pairs})
+        # Get the votes
+        votes = [n_votes for n_votes, _ in pairs]
 
-def makeRandProfile(numMayors, numBallots, maxNumVotes):
-    ranking = range(numMayors)
-    pairs = set()
-    for i in xrange(numBallots):
-        random.shuffle(ranking)
-        pairs.add((random.randint(1,maxNumVotes),tuple(ranking)))
-    return Profile(pairs)
+        # Get total number of votes
+        self.total_votes = sum(votes)
 
-def sign(n):
-    return 1 if n > 0 else (-1 if n < 0 else 0)
-def removeIndex(aTuple, index):
-    return aTuple[:index] + aTuple[index+1:]
-def maxes(iterable, key=lambda x: x):
-    keyOfBest = None
-    bests = []
-    for item in iterable:
-        keyOfItem = key(item)
-        if keyOfItem > keyOfBest or keyOfBest is None:
-            bests = [item]
-            keyOfBest = keyOfItem
-        elif keyOfItem == keyOfBest:
-            bests.append(item)
-    return bests
+        # Create a Net Preference Graph
+        self.__calc_preference_net()
+
+        # Set votes_per_mayor for Plurality
+        self.__calc_votes_per_mayor()
+
+    # Mayor comparisons
+    def net_preference(self, mayor1, mayor2):
+        """Calculate preference between 2 mayors according to
+        the Net Preference Graph and returns its answer
+        
+        Keyword arguments:
+            mayor1 -- mayor to be compared
+            mayor2 -- other mayor to be compared
+        """          
+        # Get the preference in the graph
+        return self.net_preference_graph[mayor1][mayor2]
+
+    def does_pareto_dominate(self, mayor1, mayor2):
+        """Returns True when mayor1 is preferred in all ballots.
+        False, otherwise.
+        
+        Keyword arguments:
+            mayor1 -- mayor to be compared
+            mayor2 -- other mayor to be compared
+        """
+        # A boolean list as mayor1 preferred
+        preferred = [b.index(mayor1) < b.index(mayor2) 
+                        for _, b in self.pairs]
+
+        # Apply AND in all elements
+        return all(preferred)
+
+    # Simple scores
+    def copeland(self, mayor):
+        """Calculate the Copeland score for a mayor.
+        
+        Keyword arguments:
+            mayor -- base mayor for scoring
+        """
+        # Get pairwise scores
+        scores = [self.__preference(1, self.net_preference(mayor, m), 0) 
+                    for m in self.mayors]
+
+        # Return the total score
+        return sum(scores)
+
+    def symmetric_borda(self, mayor):
+        """Calculate the Symmetric Borda score for a mayor.
+        
+        Keyword arguments:
+            mayor -- base mayor for scoring
+        """
+        # Get pairwise scores
+        scores = [self.net_preference(mayor, m) for m in self.mayors]
+
+        # Return the total score
+        return sum(scores)
+
+    def borda(self, mayor):
+        """Calculate the Borda score for a mayor.
+        
+        Keyword arguments:
+            mayor -- base mayor for scoring
+        """
+        # Max score to be applied with borda count
+        top_score = len(self.mayors) - 1
+
+        # Get pairwise scores
+        scores = [n_votes * (top_score - ballot.index(mayor)) 
+                    for n_votes, ballot in self.pairs]
+
+        # Return the total score
+        return sum(scores)
+
+    def dowdall(self, mayor):
+        """Calculate the Dowdall score for a mayor.
+        
+        Keyword arguments:
+            mayor -- base mayor for scoring
+        """
+        # Max score to be applied with borda count
+        top_score = len(self.mayors) - 1
+
+        # Get pairwise scores
+        scores = [n_votes * ((top_score - ballot.index(mayor)) / (ballot.index(mayor) + 1))
+                    for n_votes, ballot in self.pairs]
+
+        # Return the total score
+        return sum(scores)
+
+    def simpson(self, mayor):
+        """Calculate the Simpson score for a mayor.
+        
+        Keyword arguments:
+            mayor -- base mayor for scoring
+        """
+        # Get pairwise scores
+        scores = [self.net_preference(mayor, m) for m in self.mayors - {mayor}]
+
+        # Return the minimum score in scores
+        return min(scores)
+
+    def plurality(self, mayor):
+        """Calculate the Plurality score for a mayor.
+        
+        Keyword arguments:
+            mayor -- base mayor for scoring
+        """
+        return self.votes_per_mayor[mayor]
+
+    def ranking(self, scorer):
+        """Returns a set of mayor winners according to some score function
+
+        Keyword arguments:
+            scorer -- score function (ex.: borda, copeland) 
+        """
+        # A list of (mayor, score)
+        scores = [(mayor, scorer(mayor)) for mayor in self.mayors]
+
+        # Ranking is the score list ordered by score descrescent
+        ranking = sorted(scores, key=lambda x: x[1], reverse=True)
+
+        return ranking
+
+    # Social Choice Functions
+    def winners(self, scorer):
+        """Returns a set of mayor winners according to some score function
+
+        Keyword arguments:
+            scorer -- score function (ex.: borda, copeland) 
+        """
+        ranking = self.ranking(scorer)  # get ranking
+        best_score = ranking[0][1]      # get best score first tuple in ranking
+
+        # Filter ranking to get all best score
+        bests = list(filter(lambda x: x[1] == best_score, ranking))
+
+        # Get only the mayors
+        winners, scores = zip(*bests)
+
+        # Return a set of winners
+        return set(winners)
+
+    def condorcet_winners(self):
+        """Calculate the Condorcet Winners and returns a set of winner mayors"""
+        winners = list()  # list of winners
+
+        # For each mayor...
+        for mayor in self.mayors:
+            # If mayor beats everyone, condorcet_condition is True
+            condorcet_condition = all(self.net_preference(mayor, mayor2) >= 0
+                                        for mayor2 in self.mayors)
+
+            # If True, mayor is a winner
+            if condorcet_condition:
+                winners.append(mayor)
+
+        return set(winners)
+
+    def single_transferable_vote(self, n=1):
+        """Calculate the winner using Single Tranferable Voting System
+        and returns a set of winner mayors.
+        
+        Keyword arguments:
+            n -- number of selected winners
+        """
+        # Winners list
+        winners = list()
+
+        # Calculate quota
+        n_winners = n + 1                                   # used for quota
+        quota = (self.total_votes // n_winners) + 1         # quota expression
+
+        # Ranking by plurality
+        ranking = self.ranking(self.plurality)
+
+        # While there are winners to be selected (positions to be fulfilled)...
+        while len(ranking) > (n - len(winners)):
+            # Difference between mayor votes and quota
+            quota_diff = 0              # used to redistribute the votes             
+            winners_len = len(winners)  # last winners length
+
+            # For each mayor, seek winners...
+            for i in range(len(ranking)):
+                
+                # Get mayor and n_votes from tuple
+                mayor, n_votes = ranking[i]
+
+                # If mayor's votes is above quota, he's a winner
+                if n_votes > quota:
+                    winners.append(mayor)            # update winners list
+                    quota_diff += (quota - n_votes)  # add difference to quota_diff
+                
+            # If didn't found winners, remove the least popular mayor
+            if winners_len == len(winners):
+                quota_diff = ranking[-1][1]  # saves the number of votes 
+                del ranking[-1]              # delete the last mayor (because it's ordered)
+
+            # Distribute the deleted votes
+            ranking = self.distribute_votes(ranking, quota_diff)
+
+        # Fulfill the rest of the positions left
+        winners += [mayor for mayor, _ in ranking]
+
+        return set(winners)
+
+    def sequential_majority_comparison(self):
+        """Find a winner using the Sequential Majority Comparison method and
+        returns the winner mayor."""
+        # Create an interable from mayors set
+        ordered_mayors = iter(self.mayors)
+
+        # Get the first mayor
+        last_winner = ordered_mayors.next()
+
+        # For each mayor
+        for mayor in ordered_mayors:
+            # If mayor is preferred, then he's the winner
+            if self.net_preference(mayor, last_winner) > 0:
+                last_winner = mayor
+
+        # Return the winner
+        return last_winner
+
+    def baldwin_rule(self):
+        """Find a winner using the Baldwin Rule and returns the winner mayor."""
+        # Ranking by borda count
+        ranking = self.ranking(self.borda)
+
+        # While there are more than 1 winner... (Yes, winner. Aren't we all?)
+        while len(ranking) > 1:
+            votes = ranking[-1][1]  # get least popular mayor's votes
+            del ranking[-1]         # delete least popular mayor
+
+            # Distribute the deleted votes
+            ranking = self.distribute_votes(ranking, votes)
+
+        # Return the remainer mayor (winner)
+        return ranking[0][0]
+
+    def nanson_rule(self):
+        """Find a winner using the Nanson Rule and returns the winner mayor."""
+        # Ranking by borda count
+        ranking = self.ranking(self.borda)
+
+        # While there are more than 1 winner...
+        while len(ranking) > 1:
+            # Divides ranking tuples
+            mayors, score = zip(*ranking)
+
+            # Calculate borda avg score
+            borda_avg = sum(score) / len(mayors)
+
+            # For each mayor in rank...
+            for i in range(len(ranking)):
+                # Get mayor and its score from rank
+                mayor, score = ranking[i]
+
+                # Delete mayor rank position, if its score is below average
+                if score < borda_avg:
+                    del ranking[i]
+
+        # Return the remainer mayor (winner)
+        return ranking[0][0]
+
+    def distribute_votes(self, rank, votes):
+        """Distribute votes keeping the proportion for each 
+        mayor and returns an updated rank.
+        
+        Keyword arguments:
+            rank -- an ordered list of (mayor, #votes)
+            votes -- number of votes to be distributed
+        """
+        # For each mayor...
+        for i in range(len(rank)):
+            _, n_votes = rank[i]                      # mayor and n_votes from tuple
+            rate = float(n_votes) / self.total_votes  # proportion of votes 
+            rank[i][1] += math.floor(votes * rate)    # updates n_votes
+
+        # No need to reorder, because the proportion was kept
+        return rank
+
+    def __preference(self, n_votes, i, j):
+        """Calculate the preference between 2 mayors and returns
+        the preference according to the number fo votes.
+            
+        Keyword arguments:
+            n_votes -- number of votes
+            i -- index of one mayor
+            j -- index of the other mayor
+        """
+        # Difference between mayors
+        n = i - j
+
+        # Exception: if n is equal to 0, preference is 0,
+        # i.e, mayors with same index
+        if n == 0: 
+            return 0
+
+        # Preference is n_votes * n / abs(n)
+        return math.copysign(n_votes, n)
+
+    def __calc_preference_net(self):
+        """Create a Net Preference Graph."""
+        # Initialize an empt dict for graph
+        self.net_preference_graph = dict()
+
+        # Creates an iterable for mayors
+        mayors = list(self.mayors)
+
+        # Number of mayors
+        n_mayors = len(mayors)
+
+        for i in range(n_mayors):
+            # Get mayor1
+            mayor1 = mayors[i]
+
+            # Initialize an empty dictionary for mayor
+            self.net_preference_graph[mayor1] = dict()
+
+            for j in range(i, n_mayors):
+                # Get mayor2
+                mayor2 = mayors[j]
+
+                # Preference list
+                preferences = list()
+
+                # For each pair of voting
+                for n_votes, ballot in self.pairs:
+                    k = ballot.index(mayor2)              # get the index of mayor2
+                    m = ballot.index(mayor1)              # get the index of mayor1
+                    p = self.__preference(n_votes, k, m)  # calculate the preference
+                    preferences.append(p)                 # save preference
+
+                # Calculate the preference
+                preference = sum(preferences)
+
+                # Save preferences
+                self.net_preference_graph[mayor1][mayor2] = preference   # mayor1 VS mayor2
+                self.net_preference_graph[mayor2][mayor1] = -preference  # mayor2 VS mayor1
+
+    def __calc_votes_per_mayor(self):
+        """Calculate total votes per each mayor according to Plurality method"""
+        # Initialize structure to save the scores
+        self.votes_per_mayor = {mayor: 0 for mayor in self.mayors}
+
+        # For each ballot's mayor, add votes
+        for n_votes, ballot in self.pairs:
+            self.votes_per_mayor[ballot[0]] += n_votes
