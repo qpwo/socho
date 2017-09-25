@@ -168,7 +168,10 @@ class Profile():
         Keyword arguments:
             mayor -- base mayor for scoring
         """
-        return self.votes_per_mayor[mayor]
+        return self.votes_per_mayor[0][mayor]
+
+    def schulze(self, mayor):
+        pass
 
     def ranking(self, scorer):
         """Returns a set of mayor winners according to some score function
@@ -184,7 +187,6 @@ class Profile():
 
         return ranking
 
-    # Social Choice Functions
     def winners(self, scorer):
         """Returns a set of mayor winners according to some score function
 
@@ -229,6 +231,9 @@ class Profile():
         # Winners list
         winners = list()
 
+        # Nth choice
+        nchoice = 0
+
         # Calculate quota
         n_winners = n + 1                                   # used for quota
         quota = (self.total_votes // n_winners) + 1         # quota expression
@@ -255,11 +260,12 @@ class Profile():
                 
             # If didn't found winners, remove the least popular mayor
             if winners_len == len(winners):
-                quota_diff = ranking[-1][1]  # saves the number of votes 
+                quota_diff = ranking[-1][1]  # saves the number of votes
+                nchoice += 1                 # update nchoice
                 del ranking[-1]              # delete the last mayor (because it's ordered)
 
             # Distribute the deleted votes
-            ranking = self.distribute_votes(ranking, quota_diff)
+            ranking = self.distribute_votes(nchoice, ranking, quota_diff)
 
         # Fulfill the rest of the positions left
         winners += [mayor for mayor, _ in ranking]
@@ -289,13 +295,17 @@ class Profile():
         # Ranking by borda count
         ranking = self.ranking(self.borda)
 
+        # Nth choice
+        nchoice = 0
+
         # While there are more than 1 winner... (Yes, winner. Aren't we all?)
         while len(ranking) > 1:
             votes = ranking[-1][1]  # get least popular mayor's votes
+            nchoice += 1            # update nchoice
             del ranking[-1]         # delete least popular mayor
 
             # Distribute the deleted votes
-            ranking = self.distribute_votes(ranking, votes)
+            ranking = self.distribute_votes(nchoice, ranking, votes)
 
         # Return the remainer mayor (winner)
         return ranking[0][0]
@@ -325,7 +335,7 @@ class Profile():
         # Return the remainer mayor (winner)
         return ranking[0][0]
 
-    def distribute_votes(self, rank, votes):
+    def distribute_votes(self, choice, rank, votes):
         """Distribute votes keeping the proportion for each 
         mayor and returns an updated rank.
         
@@ -333,11 +343,14 @@ class Profile():
             rank -- an ordered list of (mayor, #votes)
             votes -- number of votes to be distributed
         """
+        # Get Nth choice votes per mayor
+        votes_nchoice = self.votes_per_mayor[choice]
+
         # For each mayor...
         for i in range(len(rank)):
-            _, n_votes = rank[i]                      # mayor and n_votes from tuple
-            rate = float(n_votes) / self.total_votes  # proportion of votes 
-            rank[i][1] += math.floor(votes * rate)    # updates n_votes
+            mayor, n_votes = rank[i]                               # mayor and n_votes from tuple
+            rate = float(votes_nchoice[mayor]) / self.total_votes  # proportion of votes 
+            rank[i][1] += math.floor(votes * rate)                 # updates n_votes
 
         # No need to reorder, because the proportion was kept
         return rank
@@ -364,10 +377,10 @@ class Profile():
 
     def __calc_preference_net(self):
         """Create a Net Preference Graph."""
-        # Initialize an empt dict for graph
+        # Initialize an empty dict for graph
         self.net_preference_graph = dict()
 
-        # Creates an iterable for mayors
+        # Create an iterable for mayors
         mayors = list(self.mayors)
 
         # Number of mayors
@@ -402,10 +415,17 @@ class Profile():
                 self.net_preference_graph[mayor2][mayor1] = -preference  # mayor2 VS mayor1
 
     def __calc_votes_per_mayor(self):
-        """Calculate total votes per each mayor according to Plurality method"""
+        """Calculate total votes per each mayor for each rank position"""
         # Initialize structure to save the scores
-        self.votes_per_mayor = {mayor: 0 for mayor in self.mayors}
+        self.votes_per_mayor = list()
 
-        # For each ballot's mayor, add votes
-        for n_votes, ballot in self.pairs:
-            self.votes_per_mayor[ballot[0]] += n_votes
+        # Number of mayor
+        n_mayors = len(self.mayors)
+
+        # For each mayor
+        for i in range(n_mayors):
+            self.votes_per_mayor.append({mayor: 0 for mayor in self.mayors})
+
+            # For each ballot's mayor, add votes
+            for n_votes, ballot in self.pairs:
+                self.votes_per_mayor[i][ballot[i]] += n_votes

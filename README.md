@@ -33,7 +33,7 @@ set([56.78])
 There are a bunch of examples in `examples.py`. The code is pretty readable, so
 to really get it look in `social_choice_functions.py`.
 
-# Methods
+## Methods
 - Borda Count
 - Single Transferable Vote
 - Sequential Majority Comparison
