@@ -429,3 +429,44 @@ class Profile():
             # For each ballot's mayor, add votes
             for n_votes, ballot in self.pairs:
                 self.votes_per_mayor[i][ballot[i]] += n_votes
+
+
+def ballot_box(self, choices):
+    """Index and order choices for Profile.
+
+    Keyword arguments:
+        choices -- a list ranked mayors,
+        i.e, [ [voter's 1 ranked mayors],
+               [voter's 2 ranked mayors],
+               [voter's 3 ranked mayors] ... ]
+
+    Return type:
+        A set of (number of votes, mayors ranked)
+    """
+    n_voters = len(choices)  # number of voters
+
+    # INDEX CHOICES
+    # For each classification, create [(0,mayor1), (1, mayor2)...]
+    choices = list(map(lambda x: list(enumerate(x)), choices))
+
+    # ORDER each classification in decrescent order
+    choices = list(map(lambda x: sorted(x, key=lambda x: x[1], reverse=True), choices))
+
+    # GROUP choices with same ordering (same preference order)
+    # Empty dict for save pairs -> {'preference order': number of voters}
+    ballots = dict()
+
+    # For each classification...
+    for i in range(n_voters):
+        # Counts the classifications with same ordering
+        ballots[choices[i]] = ballots.get(choices[i], 0) + 1
+
+    # DATA FOR PROFILE
+    # Pairs -> [(ballot, number of votes)...]
+    pairs = list(ballots.items())
+
+    # Transform -> [(number of votes, ballot)...]
+    pairs = list(map(lambda x: (x[1], x[0]), pairs))
+
+    # Cast to set and return it
+    return set(pairs)
