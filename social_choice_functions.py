@@ -60,10 +60,13 @@ class Profile():
         self.total_votes = sum(votes)
 
         # Create a Net Preference Graph
-        self.__calc_preference_net()
+        self.__calc_net_preference()
 
         # Set votes_per_mayor for Plurality
         self.__calc_votes_per_mayor()
+
+        # Initialize a Path Preference Graph
+        self.path_preference_graph = {mayor: dict() for mayor in self.mayors}
 
     # Mayor comparisons
     def net_preference(self, mayor1, mayor2):
@@ -171,7 +174,28 @@ class Profile():
         return self.votes_per_mayor[0][mayor]
 
     def schulze(self, mayor):
-        pass
+        """Return the total mayor's wins with Schulze method.
+        
+        Keyword arguments:
+            mayor -- base mayor for voting count
+        """
+        if len(self.path_preference_graph[mayor]) == 0:  # wasn't calculated yet 
+            self.__calc_path_preference()
+
+        # List of 1's and 0's (1 => win, 0 => defeat)
+        wins = list()
+
+        # For each other mayor
+        for mayor2 in self.mayors - {mayor}:
+            # Get strengths
+            mayor1_strength = self.path_preference_graph[mayor][mayor2]
+            mayor2_strength = self.path_preference_graph[mayor2][mayor]
+
+            win_or_defeat = int(mayor1_strength > mayor2_strength)  # calculate win or defeat
+            wins.append(win_or_defeat)                              # save battle's result
+
+        # Return total number of wins
+        return sum(wins)
 
     def ranking(self, scorer):
         """Returns a set of mayor winners according to some score function
@@ -375,10 +399,8 @@ class Profile():
         # Preference is n_votes * n / abs(n)
         return math.copysign(n_votes, n)
 
-    def __calc_preference_net(self):
+    def __calc_net_preference(self):
         """Create a Net Preference Graph."""
-        # Initialize an empty dict for graph
-        self.net_preference_graph = dict()
 
         # Create an iterable for mayors
         mayors = list(self.mayors)
@@ -386,19 +408,16 @@ class Profile():
         # Number of mayors
         n_mayors = len(mayors)
 
+        # Initialize graph
+        self.net_preference_graph = {mayor: dict() for mayor in mayors}
+
         for i in range(n_mayors):
             # Get mayor1
             mayor1 = mayors[i]
 
-            # Initialize an empty dictionary for mayor
-            self.net_preference_graph[mayor1] = dict()
-
             for j in range(i, n_mayors):
                 # Get mayor2
                 mayor2 = mayors[j]
-
-                # Initialize an empty dictionary for mayor
-                self.net_preference_graph[mayor2] = dict()
 
                 # Preference list
                 preferences = list()
@@ -432,6 +451,88 @@ class Profile():
             # For each ballot's mayor, add votes
             for n_votes, ballot in self.pairs:
                 self.votes_per_mayor[i][ballot[i]] += n_votes
+
+    def __calc_path_preference(self):
+        """Calculate paths' strengths for Schulze method."""
+
+        # Create an iterable for mayors
+        mayors = list(self.mayors)
+
+        # Number of mayors
+        n_mayors = len(mayors)
+
+        for i in range(n_mayors):
+            # Get mayor1
+            mayor1 = mayors[i]
+
+            for j in range(i + 1, n_mayors):
+                # Get mayor2
+                mayor2 = mayors[j]
+
+                # Get strengths
+                strength1 = self.__calc_strength(mayor1, mayor2)  # mayor1 VS mayor2
+                strength2 = self.__calc_strength(mayor2, mayor1)  # mayor2 VS mayor1
+
+                # Save strengths
+                self.path_preference_graph[mayor1][mayor2] = strength1
+                self.path_preference_graph[mayor2][mayor1] = strength2
+
+    def __calc_strength(self, mayor1, mayor2):
+        """Return the weakest link of the strongest path.
+
+        Keyword arguments:
+            mayor1 -- origin mayor
+            mayor2 -- destiny mayor
+            (path from mayor1 to mayor2)
+        """
+        # Find possible paths between mayor1 and mayor2
+        paths = self.__calc_paths(mayor1, mayor2)
+
+        # Get strength for each path (weakest link)
+        strength = list(map(lambda x: min(x), paths))
+
+        # Return the strongest strength
+        return max(strength)
+        
+
+    def __calc_paths(self, mayor1, mayor2, mayors=None):
+        """Find the possible paths between mayor1 and mayor2.
+
+        Keyword arguments:
+            mayor1 -- origin mayor
+            mayor2 -- destiny mayor
+            (path from mayor1 to mayor2)
+        """
+        # Check if mayors exists
+        if mayors is None:
+            mayors = self.mayors - {mayor1}
+
+        n_mayors = len(mayors)  # number of mayors
+        paths = list()          # list of possible paths
+        path = list()           # list of weights
+
+        # For each mayor that is not mayor1...
+        for mayor in mayors:
+
+            # Get preference of mayor1 over mayor
+            preference = self.net_preference_graph[mayor1][mayor]
+            path.append(preference)  # save current weigth
+
+            # End of path
+            if mayor == mayor2:
+                paths.append(path)       # add to possible paths
+                path = list()            # start a new path
+            else: # path isn't over
+                new_mayors = mayors - {mayor}
+                subpath = self.__calc_paths(mayor, mayor2, new_mayors)
+
+                # For each subpath (list of weights), 
+                # concatenate with current path and save it
+                for weights in subpath:
+                    paths.append(path + weights)
+
+        # Return a list of possible paths between mayor1 and mayor2
+        return paths
 
 
 def ballot_box(choices):
