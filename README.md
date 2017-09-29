@@ -32,18 +32,21 @@ set([56.78])
 
 ## Usage
 ```bash
-usage: main.py [-h] -i INPUT_FILEPATH -f
+usage: main.py [-h] -i INPUT_FILEPATH [-s SEP] -f
                {borda,plurality,simpson,copeland,dowdall,symmetric_borda}
-               [-o OUTPUT_FILEPATH]
+               [-o OUTPUT_FILEPATH] [-c COMPARE_FILEPATH]
 
 optional arguments:
   -h, --help            show this help message and exit
   -i INPUT_FILEPATH, --input INPUT_FILEPATH
-                        Path to input file
+                        Path to input file.
+  -s SEP, --sep SEP     File separator, i. e., ',' or ' '...
   -f {borda,plurality,simpson,copeland,dowdall,symmetric_borda}, --function {borda,plurality,simpson,copeland,dowdall,symmetric_borda}
-                        Social choice function
+                        Social choice function.
   -o OUTPUT_FILEPATH, --output OUTPUT_FILEPATH
-                        Path to output file
+                        Path to output file.
+  -c COMPARE_FILEPATH, --compare COMPARE_FILEPATH
+                        Path to rank file to be compared.
 ```
 
 ## Example
