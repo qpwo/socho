@@ -397,6 +397,9 @@ class Profile():
                 # Get mayor2
                 mayor2 = mayors[j]
 
+                # Initialize an empty dictionary for mayor
+                self.net_preference_graph[mayor2] = dict()
+
                 # Preference list
                 preferences = list()
 
@@ -431,7 +434,7 @@ class Profile():
                 self.votes_per_mayor[i][ballot[i]] += n_votes
 
 
-def ballot_box(self, choices):
+def ballot_box(choices):
     """Index and order choices for Profile.
 
     Keyword arguments:
@@ -445,9 +448,10 @@ def ballot_box(self, choices):
     """
     n_voters = len(choices)  # number of voters
 
-    # INDEX CHOICES
-    # For each classification, create [(0,mayor1), (1, mayor2)...]
-    choices = list(map(lambda x: list(enumerate(x)), choices))
+    if not (type(choices[0][0]) is tuple): # it's not indexed
+        # INDEX CHOICES, i.e., name mayors
+        # For each classification, create [(mayor1, rank1), (mayor2, rank2)...]
+        choices = list(map(lambda x: list(enumerate(x)), choices))
 
     # ORDER each classification in decrescent order
     choices = list(map(lambda x: sorted(x, key=lambda x: x[1], reverse=True), choices))
@@ -458,8 +462,11 @@ def ballot_box(self, choices):
 
     # For each classification...
     for i in range(n_voters):
+        key, _ = zip(*choices[i])  # get only mayors' names as key
+        key = tuple(key)           # cast to tuple to use as dict's key
+
         # Counts the classifications with same ordering
-        ballots[choices[i]] = ballots.get(choices[i], 0) + 1
+        ballots[key] = ballots.get(key, 0) + 1
 
     # DATA FOR PROFILE
     # Pairs -> [(ballot, number of votes)...]
