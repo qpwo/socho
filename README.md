@@ -64,3 +64,4 @@ $ python3 main.py -i tests/input.txt -f borda -o tests/output.txt
 - Copeland
 - Symmetric Borda
 - Dowdall
+- Schulze
