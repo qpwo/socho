@@ -30,8 +30,26 @@ And of course you can run elections:
 set([56.78])
 ```
 
-There are a bunch of examples in `examples.py`. The code is pretty readable, so
-to really get it look in `social_choice_functions.py`.
+## Usage
+```bash
+usage: main.py [-h] -i INPUT_FILEPATH -f
+               {borda,plurality,simpson,copeland,dowdall,symmetric_borda}
+               [-o OUTPUT_FILEPATH]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INPUT_FILEPATH, --input INPUT_FILEPATH
+                        Path to input file
+  -f {borda,plurality,simpson,copeland,dowdall,symmetric_borda}, --function {borda,plurality,simpson,copeland,dowdall,symmetric_borda}
+                        Social choice function
+  -o OUTPUT_FILEPATH, --output OUTPUT_FILEPATH
+                        Path to output file
+```
+
+## Example
+```bash
+$ python3 main.py -i tests/input.txt -f borda -o tests/output.txt
+```
 
 ## Methods
 - Borda Count
