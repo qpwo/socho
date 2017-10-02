@@ -37,13 +37,23 @@ def main(args):
 		print("Comparing with {}...".format(args.compare_filepath))
 
 		compare = open(args.compare_filepath, 'r')  # open file
+
+		# Create an ordered rank
+		comp_rank = list()
+
+		for line in compare:
+			k = line.split(" ")
+			comp_rank.append((k[0], float(k[1])))
+
+		comp_rank.sort(key=lambda x: x[1], reverse=True)
+
 		line_count = 1								# for error msg
 		error_count = 0								# for error counting
 
 		# For each ranked position...
-		for mayor1, score1 in ranking:
-			line = compare.readline()  		  # get position to compare
-			mayor2, score2 = line.split(' ')  # split info
+		for i in range(len(comp_rank)):
+			mayor1, score1 = ranking[i]    # info from generated rank
+			mayor2, score2 = comp_rank[i]  # info from compare rank
 
 			# Print message if it is different
 			if mayor1 != mayor2:
