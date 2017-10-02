@@ -11,6 +11,7 @@ https://github.com/btrevizan/pySCF
 """
 import math
 import copy
+import numpy
 
 
 class Profile():
@@ -103,8 +104,11 @@ class Profile():
             mayor -- base mayor for scoring
         """
         # Get pairwise scores
-        scores = [self.__preference(1, self.net_preference(mayor, m), 0) 
-                    for m in self.mayors]
+        scores = list()
+
+        for m in self.mayors:
+            preference = self.net_preference(mayor, m)   # preference over m
+            scores.append(numpy.sign(preference))        # win or not
 
         # Return the total score
         return sum(scores)
@@ -397,7 +401,7 @@ class Profile():
             return 0
 
         # Preference is n_votes * n / abs(n)
-        return math.copysign(n_votes, n)
+        return n_votes * numpy.sign(n)
 
     def __calc_net_preference(self):
         """Create a Net Preference Graph."""
