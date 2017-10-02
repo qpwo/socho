@@ -54,6 +54,9 @@ optional arguments:
 $ python3 main.py -i tests/input.txt -f borda -o tests/output.txt
 ```
 
+### Test files
+Examples of input and output files are in `tests/` folder. Please follow the same structure.
+
 ## Methods
 - Borda Count
 - Single Transferable Vote
