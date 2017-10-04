@@ -71,3 +71,4 @@ Examples of input and output files are in `tests/` folder. Please follow the sam
 - Symmetric Borda
 - Dowdall
 - Schulze
+- Raynaud
