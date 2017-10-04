@@ -211,9 +211,9 @@ class Profile():
         scores = [(mayor, scorer(mayor)) for mayor in self.mayors]
 
         # Ranking is the score list ordered by score descrescent
-        ranking = sorted(scores, key=lambda x: x[1], reverse=True)
+        scores.sort(key=lambda x: x[1], reverse=True)
 
-        return ranking
+        return scores
 
     def winners(self, scorer):
         """Returns a set of mayor winners according to some score function
@@ -559,7 +559,7 @@ def ballot_box(choices):
         choices = list(map(lambda x: list(enumerate(x)), choices))
 
     # ORDER each classification in decrescent order
-    choices = list(map(lambda x: sorted(x, key=lambda x: x[1], reverse=True), choices))
+    choices = list(map(lambda x: sorted(x, key=lambda y: y[1], reverse=True), choices))
 
     # GROUP choices with same ordering (same preference order)
     # Empty dict for save pairs -> {'preference order': number of voters}
