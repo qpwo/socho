@@ -45,10 +45,13 @@ def main(args):
 			k = line.split(" ")
 			comp_rank.append((k[0], float(k[1])))
 
-		comp_rank.sort(key=lambda x: x[1], reverse=True)
+		compare.close()
 
-		line_count = 1								# for error msg
-		error_count = 0								# for error counting
+		# Order compare rank
+		comp_rank.sort(key=lambda x: x[1], reverse=True)  # by score
+
+		position_count = 1   # for error msg
+		error_count = 0	 	 # for error counting
 
 		# For each ranked position...
 		for i in range(len(comp_rank)):
@@ -57,14 +60,12 @@ def main(args):
 
 			# Print message if it is different
 			if mayor1 != mayor2:
-				print("{} should be {} in line {}".format(mayor1, mayor2, line_count))
+				print("{} should be {} in line {}".format(mayor1, mayor2, position_count))
 				error_count += 1  # update error count
 
-			line_count += 1
+			position_count += 1   # update position count
 
-		compare.close()
-
-		print("{} errors of {}.".format(error_count, line_count-1))
+		print("{} errors of {}.".format(error_count, position_count-1))
 
 
 if __name__ == "__main__":
