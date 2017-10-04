@@ -293,7 +293,7 @@ class Profile():
                 del ranking[-1]              # delete the last mayor (because it's ordered)
 
             # Distribute the deleted votes
-            ranking = self.distribute_votes(nchoice, ranking, quota_diff)
+            ranking = self.__distribute_votes(nchoice, ranking, quota_diff)
 
         # Fulfill the rest of the positions left
         winners += [mayor for mayor, _ in ranking]
@@ -318,7 +318,7 @@ class Profile():
         # Return the winner
         return last_winner
 
-    def baldwin_rule(self):
+    def baldwin(self):
         """Find a winner using the Baldwin Rule and returns the winner mayor."""
         # Ranking by borda count
         ranking = self.ranking(self.borda)
@@ -333,12 +333,12 @@ class Profile():
             del ranking[-1]         # delete least popular mayor
 
             # Distribute the deleted votes
-            ranking = self.distribute_votes(nchoice, ranking, votes)
+            ranking = self.__distribute_votes(nchoice, ranking, votes)
 
         # Return the remainer mayor (winner)
         return ranking[0][0]
 
-    def nanson_rule(self):
+    def nanson(self):
         """Find a winner using the Nanson Rule and returns the winner mayor."""
         # Ranking by borda count
         ranking = self.ranking(self.borda)
@@ -363,7 +363,7 @@ class Profile():
         # Return the remainer mayor (winner)
         return ranking[0][0]
 
-    def distribute_votes(self, choice, rank, votes):
+    def __distribute_votes(self, choice, rank, votes):
         """Distribute votes keeping the proportion for each 
         mayor and returns an updated rank.
         
