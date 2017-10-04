@@ -363,6 +363,14 @@ class Profile():
         # Return the remainer mayor (winner)
         return ranking[0][0]
 
+    def raynaud(self):
+        """Find a Raynaud winner and return it."""
+        # Get Simpson ranking
+        simpson = self.ranking(self.simpson)
+
+        # Return first mayor of rank
+        return simpson[0][0]
+
     def __distribute_votes(self, choice, rank, votes):
         """Distribute votes keeping the proportion for each 
         mayor and returns an updated rank.
