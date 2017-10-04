@@ -24,6 +24,12 @@ def main(args):
 		mayors_label = "\"{}\"".format(mayors[j])    # mayors name
 		ranking[i] = (mayors_label, ranking[i][1])	 # save mayor label
 
+	# Order by label (tied cases)
+	ranking.sort(key=lambda x: x[0])
+
+	# Order by score
+	ranking.sort(key=lambda x: x[1], reverse=True)
+
 	# Save rank in file
 	output = open(args.output_filepath, 'w')
 
