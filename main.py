@@ -2,7 +2,7 @@ import numpy
 import argparse
 
 from pandas import read_csv
-from social_choice_functions import Profile, ballot_box
+from social_choice_functions import Profile, ballot_box, plurality
 
 
 def main(args):
@@ -14,9 +14,14 @@ def main(args):
 	# (mayors X votes) to (votes X mayors)
 	data = numpy.array(data.T)  				    	# transpose
 
-	profile = Profile(ballot_box(data))	  			# create profile
-	scorer = eval('profile.' + args.function) 	     	# voting method
-	ranking = profile.ranking(scorer)					# get ranking
+	if args.function == 'plurality':
+		predictions = read_csv(args.predictions_filepath, sep=args.sep)  # get predicitons
+		predictions = numpy.array(predictions.T)						 # transpose
+		ranking = plurality(data, predictions)							 # get ranking
+	else:
+		profile = Profile(ballot_box(data))	  							 # create profile
+		scorer = eval('profile.' + args.function) 	     				 # voting method
+		ranking = profile.ranking(scorer)								 # get ranking
 
 	# Map back to mayors labels
 	for i in range(len(ranking)):
@@ -82,6 +87,10 @@ if __name__ == "__main__":
 						dest="input_filepath", 
 						help="Path to input file.", 
 						required=True)
+
+	parser.add_argument("-p", "--predictions", 
+						dest="predictions_filepath", 
+						help="Path to predictions file (required for plurality).")
 
 	parser.add_argument("-s", "--sep", 
 						dest="sep",

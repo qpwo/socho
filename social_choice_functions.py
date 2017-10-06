@@ -551,7 +551,7 @@ def ballot_box(choices):
     """Index and order choices for Profile.
 
     Keyword arguments:
-        choices -- a list ranked mayors,
+        choices -- a list of ranked mayors,
         i.e, [ [voter's 1 ranked mayors],
                [voter's 2 ranked mayors],
                [voter's 3 ranked mayors] ... ]
@@ -590,3 +590,68 @@ def ballot_box(choices):
 
     # Cast to set and return it
     return set(pairs)
+
+
+def plurality(self, probabilities, predictions):
+    """Calculate the Plurality score for a mayor.
+    
+    Keyword arguments:
+        probabilities -- a list of instances' probabilities,
+            i.e, [ [voter's 1 instances' probabilities],
+                   [voter's 2 instances' probabilities],
+                   [voter's 3 instances' probabilities] ... ]
+        predictions -- a list of instances' classes,
+            i.e, [ [voter's 1 instances' classes],
+                   [voter's 2 instances' classes],
+                   [voter's 3 instances' classes] ... ]
+        
+
+    Score is calculated as the mean of class' probabilities.
+    """
+    # List of (instance, probabiliy mean) to be used as rank
+    ranking = list()
+
+    n_classifiers = len(probabilities)   # number of voters
+    n_instances = len(probabilities[0])  # number of mayors
+
+    # For each instance in every classifier...
+    for i in range(n_instances):
+        # Class count -> {<class>: <counts>}
+        class_count = dict()
+
+        # For each classifier...
+        for c in range(n_classifiers):
+            # Predicted class for instance i
+            p = predictions[c][i]
+
+            # Update the number of times the class was chosen
+            class_count[p] = class_count.get(p, 0) + 1
+
+        # Rank classes
+        ranking = sorted(class_count.items(), key=lambda x: x[1], reverse=True)
+
+        # IF THERE IS A TIE, I.E., WHEN TWO CLASSES HAVE THE SAME NUMBER OF VOTES???
+
+        # Most voted class for instance i
+        voted_class, n_votes = ranking[0]
+
+        # Sum of most voted class' probabilities
+        sum_probabilities = 0
+
+        # For each classifier...
+        for c in range(n_classifiers):
+            # Predicted class for instance i
+            if predictions[c][i] == voted_class:
+                sum_probabilities += probabilities[c][i]
+
+        # Probability mean
+        prob_mean = sum_probabilities / n_votes
+
+        # Update ranking
+        ranking.append((i, prob_mean))
+
+    # Order ranking
+    ranking.sort(key=lambda x: x[1], reverse=True)
+
+    return ranking
+
