@@ -74,3 +74,4 @@ Examples of input and output files are in `tests/` folder. Please follow the sam
 - Dowdall
 - Schulze
 - Raynaud
+- Kemeny Young

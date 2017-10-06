@@ -19,9 +19,12 @@ def main(args):
 		predictions = numpy.array(predictions.T)						 # transpose
 		ranking = plurality(data, predictions)							 # get ranking
 	else:
-		profile = Profile(ballot_box(data))	  							 # create profile
-		scorer = eval('profile.' + args.function) 	     				 # voting method
-		ranking = profile.ranking(scorer)								 # get ranking
+		profile = Profile(ballot_box(data))								 # create profile
+		if args.function == 'kemeny_young':
+			ranking = profile.kemeny_young()
+		else:							 
+			scorer = eval('profile.' + args.function) 	     			 # voting method
+			ranking = profile.ranking(scorer)							 # get ranking
 
 	# Map back to mayors labels
 	for i in range(len(ranking)):

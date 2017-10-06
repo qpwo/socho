@@ -12,6 +12,7 @@ https://github.com/btrevizan/pySCF
 import math
 import copy
 import numpy
+from lp_solve import lp_solve
 
 
 class Profile():
@@ -176,6 +177,45 @@ class Profile():
             mayor -- base mayor for scoring
         """
         return self.votes_per_mayor[0][mayor]
+
+    def kemeny_young(self):
+        """Kemeny-Young optimal rank aggregation.
+        
+        An adaptation from:
+        http://vene.ro/blog/kemeny-young-optimal-rank-aggregation-in-python.html
+        """
+
+        n_voters = self.total_votes      # 1 vote per voter, so #votes = #voters
+        n_candidates = len(self.mayors)  # #mayors = #candidates
+        
+        # Maximize c.T * x
+        edge_weights = _build_graph()
+        c = -1 * edge_weights.ravel()  
+
+        idx = lambda i, j: n_candidates * i + j
+
+        # constraints for every pair
+        pairwise_constraints = numpy.zeros(((n_candidates * (n_candidates - 1)) / 2, n_candidates ** 2))
+        for row, (i, j) in zip(pairwise_constraints, combinations(range(n_candidates), 2)):
+            row[[idx(i, j), idx(j, i)]] = 1
+
+        # and for every cycle of length 3
+        triangle_constraints = numpy.zeros(((n_candidates * (n_candidates - 1) * (n_candidates - 2)), n_candidates ** 2))
+        for row, (i, j, k) in zip(triangle_constraints, permutations(range(n_candidates), 3)):
+            row[[idx(i, j), idx(j, k), idx(k, i)]] = 1
+
+        constraints = numpy.vstack([pairwise_constraints, triangle_constraints])
+        constraint_rhs = numpy.hstack([numpy.ones(len(pairwise_constraints)), numpy.ones(len(triangle_constraints))])
+        constraint_signs = numpy.hstack([numpy.zeros(len(pairwise_constraints)), numpy.ones(len(triangle_constraints))])
+        obj, x, duals = lp_solve(c, constraints, constraint_rhs, constraint_signs, xint=range(1, 1 + n_candidates ** 2))
+
+        x = numpy.array(x).reshape((n_candidates, n_candidates))
+        aggr_rank = x.sum(axis=1)
+
+        candidates_rank = sorted(list(aggr_rank))
+        scores_rank = list(range(n_candidates, 0, -1))
+
+        return list(zip(candidates_rank, scores_rank))
 
     def schulze(self, mayor):
         """Return the total mayor's wins with Schulze method.
@@ -545,6 +585,36 @@ class Profile():
 
         # Return a list of possible paths between mayor1 and mayor2
         return paths
+
+    def _build_graph(self):
+        """Build graph for Kemeny-Young method.
+
+        An adaptation from:
+        http://vene.ro/blog/kemeny-young-optimal-rank-aggregation-in-python.html
+        """
+        n_voters = self.total_votes
+        n_candidates = len(self.mayors)
+
+        ranks = list()
+        for n_votes, ballot in self.pairs
+            for i in range(n_votes):
+                ranks.append(list(ballot))
+
+        ranks = numpy.array(ranks)
+        edge_weights = numpy.zeros((n_candidates, n_candidates))
+
+        for i, j in combinations(range(n_candidates), 2):
+            preference = ranks[:, i] - ranks[:, j]
+            
+            h_ij = numpy.sum(preference < 0)  # prefers i to j
+            h_ji = numpy.sum(preference > 0)  # prefers j to i
+            
+            if h_ij > h_ji:
+                edge_weights[i, j] = h_ij - h_ji
+            elif h_ij < h_ji:
+                edge_weights[j, i] = h_ji - h_ij
+
+        return edge_weights
 
 
 def ballot_box(choices):
