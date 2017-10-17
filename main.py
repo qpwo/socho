@@ -104,7 +104,7 @@ if __name__ == "__main__":
 						dest="function", 
 						help="Social choice function.",
 						required=True,
-						choices=['borda', 'plurality', 'simpson', 'copeland', 'dowdall', 'symmetric_borda'])
+						choices=['borda', 'plurality', 'simpson', 'copeland', 'dowdall', 'kemeny_young', 'symmetric_borda'])
 
 	parser.add_argument("-o", "--output", 
 						dest="output_filepath", 
