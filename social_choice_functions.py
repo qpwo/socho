@@ -12,7 +12,7 @@ https://github.com/btrevizan/pySCF
 import math
 import copy
 import numpy
-from lp_solve import lp_solve
+from itertools import combinations, permutations
 
 
 class Profile():
@@ -184,38 +184,22 @@ class Profile():
         An adaptation from:
         http://vene.ro/blog/kemeny-young-optimal-rank-aggregation-in-python.html
         """
+        min_dist = numpy.inf
+        best_rank = None
 
         n_voters = self.total_votes      # 1 vote per voter, so #votes = #voters
         n_candidates = len(self.mayors)  # #mayors = #candidates
-        
-        # Maximize c.T * x
-        edge_weights = _build_graph()
-        c = -1 * edge_weights.ravel()  
 
-        idx = lambda i, j: n_candidates * i + j
+        for rank in permutations(range(n_candidates)):
 
-        # constraints for every pair
-        pairwise_constraints = numpy.zeros(((n_candidates * (n_candidates - 1)) / 2, n_candidates ** 2))
-        for row, (i, j) in zip(pairwise_constraints, combinations(range(n_candidates), 2)):
-            row[[idx(i, j), idx(j, i)]] = 1
+            dist = numpy.sum(self.kendalltau_dist(rank, ballot) for _, ballot in self.pairs)
 
-        # and for every cycle of length 3
-        triangle_constraints = numpy.zeros(((n_candidates * (n_candidates - 1) * (n_candidates - 2)), n_candidates ** 2))
-        for row, (i, j, k) in zip(triangle_constraints, permutations(range(n_candidates), 3)):
-            row[[idx(i, j), idx(j, k), idx(k, i)]] = 1
+            if dist < min_dist:
+                min_dist = dist
+                best_rank = rank
 
-        constraints = numpy.vstack([pairwise_constraints, triangle_constraints])
-        constraint_rhs = numpy.hstack([numpy.ones(len(pairwise_constraints)), numpy.ones(len(triangle_constraints))])
-        constraint_signs = numpy.hstack([numpy.zeros(len(pairwise_constraints)), numpy.ones(len(triangle_constraints))])
-        obj, x, duals = lp_solve(c, constraints, constraint_rhs, constraint_signs, xint=range(1, 1 + n_candidates ** 2))
-
-        x = numpy.array(x).reshape((n_candidates, n_candidates))
-        aggr_rank = x.sum(axis=1)
-
-        candidates_rank = sorted(list(aggr_rank))
         scores_rank = list(range(n_candidates, 0, -1))
-
-        return list(zip(candidates_rank, scores_rank))
+        return list(zip(best_rank, scores_rank))
 
     def schulze(self, mayor):
         """Return the total mayor's wins with Schulze method.
@@ -411,6 +395,23 @@ class Profile():
         # Return first mayor of rank
         return simpson[0][0]
 
+
+    def kendalltau_dist(self, rank_a, rank_b):
+        """Calculates the Kendall Tau distance.
+
+        Keyword arguments:
+            rank_a -- a ballot
+            rank_b -- a ballot
+        """
+        tau = 0
+        n_candidates = len(rank_a)
+
+        for i, j in combinations(range(n_candidates), 2):
+            tau += (numpy.sign(rank_a[i] - rank_a[j]) ==
+                    -numpy.sign(rank_b[i] - rank_b[j]))
+
+        return tau
+
     def __distribute_votes(self, choice, rank, votes):
         """Distribute votes keeping the proportion for each 
         mayor and returns an updated rank.
@@ -596,7 +597,7 @@ class Profile():
         n_candidates = len(self.mayors)
 
         ranks = list()
-        for n_votes, ballot in self.pairs
+        for n_votes, ballot in self.pairs:
             for i in range(n_votes):
                 ranks.append(list(ballot))
 
@@ -662,7 +663,7 @@ def ballot_box(choices):
     return set(pairs)
 
 
-def plurality(self, probabilities, predictions):
+def plurality(probabilities, predictions):
     """Calculate the Plurality score for a mayor.
     
     Keyword arguments:
@@ -698,12 +699,12 @@ def plurality(self, probabilities, predictions):
             class_count[p] = class_count.get(p, 0) + 1
 
         # Rank classes
-        ranking = sorted(class_count.items(), key=lambda x: x[1], reverse=True)
+        class_rank = sorted(class_count.items(), key=lambda x: x[1], reverse=True)
 
         # IF THERE IS A TIE, I.E., WHEN TWO CLASSES HAVE THE SAME NUMBER OF VOTES???
 
         # Most voted class for instance i
-        voted_class, n_votes = ranking[0]
+        voted_class, n_votes = class_rank[0]
 
         # Sum of most voted class' probabilities
         sum_probabilities = 0
