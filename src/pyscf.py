@@ -16,13 +16,13 @@ from itertools import combinations, permutations
 
 
 class Profile():
-    """A profile is a set of (number of votes, ballot) pairs where a 
-    ballot is some ordering of the candidates. 
+    """A profile is a set of (number of votes, ballot) pairs where a
+    ballot is some ordering of the candidates.
 
     For example:
     collectedVotes = Profile({(40,(0,1,2)),(28,(1,2,0)),(32,(2,1,0))})
 
-    That means 40 people like candidate 0 most, then candidate 1 middle, 
+    That means 40 people like candidate 0 most, then candidate 1 middle,
     and hate candidate 2. 28 people like candidate 1 the most and so on.
 
     Properties:
@@ -35,7 +35,7 @@ class Profile():
 
     def __init__(self, pairs):
         """Set the properties.
-        
+
         Keyword arguments:
             pairs -- a set of votes and mayors
         """
@@ -74,24 +74,24 @@ class Profile():
     def net_preference(self, mayor1, mayor2):
         """Calculate preference between 2 mayors according to
         the Net Preference Graph and returns its answer
-        
+
         Keyword arguments:
             mayor1 -- mayor to be compared
             mayor2 -- other mayor to be compared
-        """          
+        """
         # Get the preference in the graph
         return self.net_preference_graph[mayor1][mayor2]
 
     def does_pareto_dominate(self, mayor1, mayor2):
         """Returns True when mayor1 is preferred in all ballots.
         False, otherwise.
-        
+
         Keyword arguments:
             mayor1 -- mayor to be compared
             mayor2 -- other mayor to be compared
         """
         # A boolean list as mayor1 preferred
-        preferred = [b.index(mayor1) < b.index(mayor2) 
+        preferred = [b.index(mayor1) < b.index(mayor2)
                         for _, b in self.pairs]
 
         # Apply AND in all elements
@@ -100,7 +100,7 @@ class Profile():
     # Simple scores
     def copeland(self, mayor):
         """Calculate the Copeland score for a mayor.
-        
+
         Keyword arguments:
             mayor -- base mayor for scoring
         """
@@ -116,7 +116,7 @@ class Profile():
 
     def symmetric_borda(self, mayor):
         """Calculate the Symmetric Borda score for a mayor.
-        
+
         Keyword arguments:
             mayor -- base mayor for scoring
         """
@@ -128,7 +128,7 @@ class Profile():
 
     def borda(self, mayor):
         """Calculate the Borda score for a mayor.
-        
+
         Keyword arguments:
             mayor -- base mayor for scoring
         """
@@ -136,7 +136,7 @@ class Profile():
         top_score = len(self.mayors) - 1
 
         # Get pairwise scores
-        scores = [n_votes * (top_score - ballot.index(mayor)) 
+        scores = [n_votes * (top_score - ballot.index(mayor))
                     for n_votes, ballot in self.pairs]
 
         # Return the total score
@@ -144,7 +144,7 @@ class Profile():
 
     def dowdall(self, mayor):
         """Calculate the Dowdall score for a mayor.
-        
+
         Keyword arguments:
             mayor -- base mayor for scoring
         """
@@ -160,7 +160,7 @@ class Profile():
 
     def simpson(self, mayor):
         """Calculate the Simpson score for a mayor.
-        
+
         Keyword arguments:
             mayor -- base mayor for scoring
         """
@@ -172,7 +172,7 @@ class Profile():
 
     def plurality(self, mayor):
         """Calculate the Plurality score for a mayor.
-        
+
         Keyword arguments:
             mayor -- base mayor for scoring
         """
@@ -180,7 +180,7 @@ class Profile():
 
     def kemeny_young(self):
         """Kemeny-Young optimal rank aggregation.
-        
+
         An adaptation from:
         http://vene.ro/blog/kemeny-young-optimal-rank-aggregation-in-python.html
         """
@@ -203,11 +203,11 @@ class Profile():
 
     def schulze(self, mayor):
         """Return the total mayor's wins with Schulze method.
-        
+
         Keyword arguments:
             mayor -- base mayor for voting count
         """
-        if len(self.path_preference_graph[mayor]) == 0:  # wasn't calculated yet 
+        if len(self.path_preference_graph[mayor]) == 0:  # wasn't calculated yet
             self.__calc_path_preference()
 
         # List of 1's and 0's (1 => win, 0 => defeat)
@@ -229,7 +229,7 @@ class Profile():
         """Returns a set of mayor winners according to some score function
 
         Keyword arguments:
-            scorer -- score function (ex.: borda, copeland) 
+            scorer -- score function (ex.: borda, copeland)
         """
         # A list of (mayor, score)
         scores = [(mayor, scorer(mayor)) for mayor in self.mayors]
@@ -243,7 +243,7 @@ class Profile():
         """Returns a set of mayor winners according to some score function
 
         Keyword arguments:
-            scorer -- score function (ex.: borda, copeland) 
+            scorer -- score function (ex.: borda, copeland)
         """
         ranking = self.ranking(scorer)  # get ranking
         best_score = ranking[0][1]      # get best score first tuple in ranking
@@ -276,7 +276,7 @@ class Profile():
     def single_transferable_vote(self, n=1):
         """Calculate the winner using Single Tranferable Voting System
         and returns a set of winner mayors.
-        
+
         Keyword arguments:
             n -- number of selected winners
         """
@@ -296,12 +296,12 @@ class Profile():
         # While there are winners to be selected (positions to be fulfilled)...
         while len(ranking) > (n - len(winners)):
             # Difference between mayor votes and quota
-            quota_diff = 0              # used to redistribute the votes             
+            quota_diff = 0              # used to redistribute the votes
             winners_len = len(winners)  # last winners length
 
             # For each mayor, seek winners...
             for i in range(len(ranking)):
-                
+
                 # Get mayor and n_votes from tuple
                 mayor, n_votes = ranking[i]
 
@@ -309,7 +309,7 @@ class Profile():
                 if n_votes > quota:
                     winners.append(mayor)            # update winners list
                     quota_diff += (quota - n_votes)  # add difference to quota_diff
-                
+
             # If didn't found winners, remove the least popular mayor
             if winners_len == len(winners):
                 quota_diff = ranking[-1][1]  # saves the number of votes
@@ -413,9 +413,9 @@ class Profile():
         return tau
 
     def __distribute_votes(self, choice, rank, votes):
-        """Distribute votes keeping the proportion for each 
+        """Distribute votes keeping the proportion for each
         mayor and returns an updated rank.
-        
+
         Keyword arguments:
             rank -- an ordered list of (mayor, #votes)
             votes -- number of votes to be distributed
@@ -426,7 +426,7 @@ class Profile():
         # For each mayor...
         for i in range(len(rank)):
             mayor, n_votes = rank[i]                               # mayor and n_votes from tuple
-            rate = float(votes_nchoice[mayor]) / self.total_votes  # proportion of votes 
+            rate = float(votes_nchoice[mayor]) / self.total_votes  # proportion of votes
             rank[i][1] += math.floor(votes * rate)                 # updates n_votes
 
         # No need to reorder, because the proportion was kept
@@ -435,7 +435,7 @@ class Profile():
     def __preference(self, n_votes, i, j):
         """Calculate the preference between 2 mayors and returns
         the preference according to the number fo votes.
-            
+
         Keyword arguments:
             n_votes -- number of votes
             i -- index of one mayor
@@ -446,7 +446,7 @@ class Profile():
 
         # Exception: if n is equal to 0, preference is 0,
         # i.e, mayors with same index
-        if n == 0: 
+        if n == 0:
             return 0
 
         # Preference is n_votes * n / abs(n)
@@ -546,7 +546,7 @@ class Profile():
 
         # Return the strongest strength
         return max(strength)
-        
+
 
     def __calc_paths(self, mayor1, mayor2, mayors=None):
         """Find the possible paths between mayor1 and mayor2.
@@ -579,7 +579,7 @@ class Profile():
                 new_mayors = mayors - {mayor}
                 subpath = self.__calc_paths(mayor, mayor2, new_mayors)
 
-                # For each subpath (list of weights), 
+                # For each subpath (list of weights),
                 # concatenate with current path and save it
                 for weights in subpath:
                     paths.append(path + weights)
@@ -606,10 +606,10 @@ class Profile():
 
         for i, j in combinations(range(n_candidates), 2):
             preference = ranks[:, i] - ranks[:, j]
-            
+
             h_ij = numpy.sum(preference < 0)  # prefers i to j
             h_ji = numpy.sum(preference > 0)  # prefers j to i
-            
+
             if h_ij > h_ji:
                 edge_weights[i, j] = h_ij - h_ji
             elif h_ij < h_ji:
@@ -665,7 +665,7 @@ def ballot_box(choices):
 
 def plurality(probabilities, predictions):
     """Calculate the Plurality score for a mayor.
-    
+
     Keyword arguments:
         probabilities -- a list of instances' probabilities,
             i.e, [ [voter's 1 instances' probabilities],
@@ -675,7 +675,7 @@ def plurality(probabilities, predictions):
             i.e, [ [voter's 1 instances' classes],
                    [voter's 2 instances' classes],
                    [voter's 3 instances' classes] ... ]
-        
+
 
     Score is calculated as the mean of class' probabilities.
     """

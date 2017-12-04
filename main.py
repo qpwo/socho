@@ -2,12 +2,12 @@ import numpy
 import argparse
 
 from pandas import read_csv
-from social_choice_functions import Profile, ballot_box, plurality
+from src.pyscf import Profile, ballot_box, plurality
 
 
 def main(args):
 	data = read_csv(args.input_filepath, sep=args.sep)  # read the data file
-	
+
 	mayors = data.axes[0]								# line labels (mayors)
 	mayors = list(mayors)								# cast to list
 
@@ -22,7 +22,7 @@ def main(args):
 		profile = Profile(ballot_box(data))								 # create profile
 		if args.function == 'kemeny_young':
 			ranking = profile.kemeny_young()
-		else:							 
+		else:
 			scorer = eval('profile.' + args.function) 	     			 # voting method
 			ranking = profile.ranking(scorer)							 # get ranking
 
@@ -86,34 +86,34 @@ if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
 
 	#-input FILEPATH -f FUNCTION -o FILEPATH
-	parser.add_argument("-i", "--input", 
-						dest="input_filepath", 
-						help="Path to input file.", 
+	parser.add_argument("-i", "--input",
+						dest="input_filepath",
+						help="Path to input file.",
 						required=True)
 
-	parser.add_argument("-p", "--predictions", 
-						dest="predictions_filepath", 
+	parser.add_argument("-p", "--predictions",
+						dest="predictions_filepath",
 						help="Path to predictions file (required for plurality).")
 
-	parser.add_argument("-s", "--sep", 
+	parser.add_argument("-s", "--sep",
 						dest="sep",
 						default="\t",
 						help="File separator, i. e., ',' or '\t'...")
 
-	parser.add_argument("-f", "--function", 
-						dest="function", 
+	parser.add_argument("-f", "--function",
+						dest="function",
 						help="Social choice function.",
 						required=True,
 						choices=['borda', 'plurality', 'simpson', 'copeland', 'dowdall', 'kemeny_young', 'symmetric_borda'])
 
-	parser.add_argument("-o", "--output", 
-						dest="output_filepath", 
-						default="test_output.txt", 
+	parser.add_argument("-o", "--output",
+						dest="output_filepath",
+						default="test_output.txt",
 						help="Path to output file.")
 
-	parser.add_argument("-c", "--compare", 
-						dest="compare_filepath", 
-						default=None, 
+	parser.add_argument("-c", "--compare",
+						dest="compare_filepath",
+						default=None,
 						help="Path to rank file to be compared.")
 
 	args = parser.parse_args()
