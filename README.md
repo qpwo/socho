@@ -16,7 +16,7 @@ If your set of candidates is `S`, then each the ballot should contain each
 element in `S` exactly once, in any order.  Your candidates can be any hashable
 objects.
 
-`weirdProfile = Profile({(40,("fish",1,56.78)),(28,(1,56.78,"fish")),(32,(56.78,1,"fish"))})`
+`weirdProfile = Profile({(40,(2,1,56.78)),(28,(1,56.78,2)),(32,(56.78,1,2))})`
 
 ```
 >>> weirdProfile.mayors
@@ -30,7 +30,36 @@ And of course you can run elections:
 set([56.78])
 ```
 
-## Usage
+## Installation
+```bash
+$ pip3 install social-choice
+```
+
+## Getting Started
+```python
+from social_choice.profile import Profile, ballot_box, plurality
+
+ballots = [(2,1,56.78), (2,1,56.78), (2,1,56.78), (1,56.78,2), (1,56.78,2), (56.78,1,2), (56.78,1,2)]
+
+# Aggregate ballots
+# {(2, (0, 2, 1)), (3, (2, 0, 1)), (2, (1, 2, 0))}
+box = ballot_box(ballots)
+
+# Create a profile
+profile = Profile(box)
+scorer = profile.borda  # function to calculate score for each mayor
+
+# A mayor list ranked by score
+# [(2, 10), (0, 7), (1, 4)]
+# maps to [(56.78, 10), (1, 7), (2, 4)]
+rank = profile.ranking(scorer)
+
+# 56.78 is the winner
+# 1 as 2nd place
+# 2 as 3rd place
+```
+
+## Line Command Usage
 ```bash
 usage: main.py [-h] -i INPUT_FILEPATH [-p PREDICTIONS_FILEPATH] [-s SEP] -f
                {borda,plurality,simpson,copeland,dowdall,symmetric_borda}
@@ -51,7 +80,7 @@ optional arguments:
                         Path to rank file to be compared.
 ```
 
-## Example
+### Example
 ```bash
 $ python3 main.py -i tests/input.txt -f borda -o tests/output.txt
 ```

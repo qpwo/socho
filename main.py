@@ -2,7 +2,7 @@ import numpy
 import argparse
 
 from pandas import read_csv
-from src.pyscf import Profile, ballot_box, plurality
+from social_choice.profile import Profile, ballot_box, plurality
 
 
 def main(args):
