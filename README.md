@@ -89,13 +89,13 @@ $ python3 main.py -i tests/input.txt -f borda -o tests/output.txt
 Examples of input and output files are in `tests/` folder. Please follow the same structure.
 
 ## Methods
-- Baldwin's Rule -> winner
-- Borda Count -> ranking
+- Baldwin -> winner
+- Borda -> ranking
 - Condorcet -> set of winners
 - Copeland -> ranking
 - Dowdall -> ranking
 - Kemeny Young -> ranking
-- Nanson's Rule -> winner
+- Nanson -> winner
 - Pareto's check -> boolean
 - Plurality -> ranking
 - Raynaud -> winner
