@@ -89,18 +89,18 @@ $ python3 main.py -i tests/input.txt -f borda -o tests/output.txt
 Examples of input and output files are in `tests/` folder. Please follow the same structure.
 
 ## Methods
-- Borda Count
-- Single Transferable Vote
-- Sequential Majority Comparison
-- Plurality
-- Baldwin's Rule
-- Pareto's check
-- Simpson
-- Nanson's Rule
-- Condorcet
-- Copeland
-- Symmetric Borda
-- Dowdall
-- Schulze
-- Raynaud
-- Kemeny Young
+- Baldwin's Rule -> winner
+- Borda Count -> ranking
+- Condorcet -> set of winners
+- Copeland -> ranking
+- Dowdall -> ranking
+- Kemeny Young -> ranking
+- Nanson's Rule -> winner
+- Pareto's check -> boolean
+- Plurality -> ranking
+- Raynaud -> winner
+- Schulze -> ranking
+- Sequential Majority Comparison -> winner
+- Simpson -> ranking
+- Symmetric Borda -> ranking
+- Single Transferable Vote -> set of winners
