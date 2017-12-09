@@ -695,75 +695,74 @@ class Profile():
 
         return edge_weights
 
+    @classmethod
+    def ballot_box(cls, choices):
+        """Index and order choices for Profile.
 
-def ballot_box(choices):
-    """Index and order choices for Profile.
+        Keyword arguments:
+            choices -- a list of ranked mayors,
+            i.e, [ [voter's 1 ranked mayors],
+                   [voter's 2 ranked mayors],
+                   [voter's 3 ranked mayors] ... ]
 
-    Keyword arguments:
-        choices -- a list of ranked mayors,
-        i.e, [ [voter's 1 ranked mayors],
-               [voter's 2 ranked mayors],
-               [voter's 3 ranked mayors] ... ]
+        Return type:
+            A set of (number of votes, mayors ranked)
+        """
+        n_voters = len(choices)  # number of voters
 
-    Return type:
-        A set of (number of votes, mayors ranked)
-    """
-    n_voters = len(choices)  # number of voters
+        if not (type(choices[0][0]) is tuple): # it's not indexed
+            # INDEX CHOICES, i.e., name mayors
+            # For each classification, create [(mayor1, rank1), (mayor2, rank2)...]
+            choices = list(map(lambda x: list(enumerate(x)), choices))
 
-    if not (type(choices[0][0]) is tuple): # it's not indexed
-        # INDEX CHOICES, i.e., name mayors
-        # For each classification, create [(mayor1, rank1), (mayor2, rank2)...]
-        choices = list(map(lambda x: list(enumerate(x)), choices))
+        # ORDER each classification in decrescent order
+        choices = list(map(lambda x: sorted(x, key=lambda y: y[1], reverse=True), choices))
 
-    # ORDER each classification in decrescent order
-    choices = list(map(lambda x: sorted(x, key=lambda y: y[1], reverse=True), choices))
+        # GROUP choices with same ordering (same preference order)
+        # Empty dict for save pairs -> {'preference order': number of voters}
+        ballots = dict()
 
-    # GROUP choices with same ordering (same preference order)
-    # Empty dict for save pairs -> {'preference order': number of voters}
-    ballots = dict()
+        # For each classification...
+        for i in range(n_voters):
+            key, _ = zip(*choices[i])  # get only mayors' names as key
+            key = tuple(key)           # cast to tuple to use as dict's key
 
-    # For each classification...
-    for i in range(n_voters):
-        key, _ = zip(*choices[i])  # get only mayors' names as key
-        key = tuple(key)           # cast to tuple to use as dict's key
+            # Counts the classifications with same ordering
+            ballots[key] = ballots.get(key, 0) + 1
 
-        # Counts the classifications with same ordering
-        ballots[key] = ballots.get(key, 0) + 1
+        # DATA FOR PROFILE
+        # Pairs -> [(ballot, number of votes)...]
+        pairs = list(ballots.items())
 
-    # DATA FOR PROFILE
-    # Pairs -> [(ballot, number of votes)...]
-    pairs = list(ballots.items())
+        # Transform -> [(number of votes, ballot)...]
+        pairs = list(map(lambda x: (x[1], x[0]), pairs))
 
-    # Transform -> [(number of votes, ballot)...]
-    pairs = list(map(lambda x: (x[1], x[0]), pairs))
+        # Cast to set and return as a Profile
+        return cls(set(pairs))
 
-    # Cast to set and return it
-    return set(pairs)
+    @classmethod
+    def aggr_rank(cls, probabilities, sc_functions):
+        """Aggregate probabilities and return a ranking.
 
+        Keyword arguments:
+            probabilities -- a list of instances' probabilities,
+                i.e, [ [voter's 1 instances' probabilities],
+                       [voter's 2 instances' probabilities],
+                       [voter's 3 instances' probabilities] ... ]
+            sc_functions -- a list with the name of social choice functions
+        """
+        profile = cls.ballot_box(probabilities)
+        rankings = dict()
 
-def aggr_rank(probabilities, sc_functions):
-    """Aggregate probabilities and return a ranking.
+        for scf in sc_functions:
 
-    Keyword arguments:
-        probabilities -- a list of instances' probabilities,
-            i.e, [ [voter's 1 instances' probabilities],
-                   [voter's 2 instances' probabilities],
-                   [voter's 3 instances' probabilities] ... ]
-        sc_functions -- a list with the name of social choice functions
-    """
-    bbox = ballot_box(probabilities)
-    profile = Profile(bbox)
-    rankings = dict()
+            if scf == 'plurality':
+                rank = profile.plurality(probabilities)
+            elif scf == 'kemeny_young':
+                rank = profile.kemeny_young()
+            else:
+                rank = profile.score(eval('profile.' + scf))
 
-    for scf in sc_functions:
+            rankings[scf] = rank
 
-        if scf == 'plurality':
-            rank = profile.plurality(probabilities)
-        elif scf == 'kemeny_young':
-            rank = profile.kemeny_young()
-        else:
-            rank = profile.score(eval('profile.' + scf))
-
-        rankings[scf] = rank
-
-    return rankings
+        return rankings
