@@ -232,10 +232,24 @@ class Profile():
             scorer -- score function (ex.: borda, copeland)
         """
         # A list of (mayor, score)
-        scores = [(mayor, scorer(mayor)) for mayor in self.mayors]
+        scores = self.score(scorer)
 
         # Ranking is the score list ordered by score descrescent
         scores.sort(key=lambda x: x[1], reverse=True)
+
+        return scores
+
+    def score(self, scorer):
+        """Returns a set of mayor according to some score function.
+
+        Keyword arguments:
+            scorer -- score function (ex.: borda, copeland)
+        """
+        # A list of (mayor, score)
+        scores = [(mayor, scorer(mayor)) for mayor in self.mayors]
+
+        # Ranking is the score list ordered by mayor id crescent
+        scores.sort(key=lambda x: x[0])
 
         return scores
 
@@ -748,7 +762,7 @@ def aggr_rank(probabilities, sc_functions):
         elif scf == 'kemeny_young':
             rank = profile.kemeny_young()
         else:
-            rank = profile.ranking(eval('profile.' + scf))
+            rank = profile.score(eval('profile.' + scf))
 
         rankings[scf] = rank
 
