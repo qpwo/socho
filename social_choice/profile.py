@@ -412,6 +412,70 @@ class Profile():
 
         return tau
 
+    @staticmethod
+    def plurality(probabilities, predictions):
+        """Calculate the Plurality score for a mayor.
+
+        Keyword arguments:
+            probabilities -- a list of instances' probabilities,
+                i.e, [ [voter's 1 instances' probabilities],
+                       [voter's 2 instances' probabilities],
+                       [voter's 3 instances' probabilities] ... ]
+            predictions -- a list of instances' classes,
+                i.e, [ [voter's 1 instances' classes],
+                       [voter's 2 instances' classes],
+                       [voter's 3 instances' classes] ... ]
+
+
+        Score is calculated as the mean of class' probabilities.
+        """
+        # List of (instance, probabiliy mean) to be used as rank
+        ranking = list()
+
+        n_classifiers = len(probabilities)   # number of voters
+        n_instances = len(probabilities[0])  # number of mayors
+
+        # For each instance in every classifier...
+        for i in range(n_instances):
+            # Class count -> {<class>: <counts>}
+            class_count = dict()
+
+            # For each classifier...
+            for c in range(n_classifiers):
+                # Predicted class for instance i
+                p = predictions[c][i]
+
+                # Update the number of times the class was chosen
+                class_count[p] = class_count.get(p, 0) + 1
+
+            # Rank classes
+            class_rank = sorted(class_count.items(), key=lambda x: x[1], reverse=True)
+
+            # IF THERE IS A TIE, I.E., WHEN TWO CLASSES HAVE THE SAME NUMBER OF VOTES???
+
+            # Most voted class for instance i
+            voted_class, n_votes = class_rank[0]
+
+            # Sum of most voted class' probabilities
+            sum_probabilities = 0
+
+            # For each classifier...
+            for c in range(n_classifiers):
+                # Predicted class for instance i
+                if predictions[c][i] == voted_class:
+                    sum_probabilities += probabilities[c][i]
+
+            # Probability mean
+            prob_mean = sum_probabilities / n_votes
+
+            # Update ranking
+            ranking.append((i, prob_mean))
+
+        # Order ranking
+        ranking.sort(key=lambda x: x[1], reverse=True)
+
+        return ranking
+
     def __distribute_votes(self, choice, rank, votes):
         """Distribute votes keeping the proportion for each
         mayor and returns an updated rank.
@@ -663,66 +727,29 @@ def ballot_box(choices):
     return set(pairs)
 
 
-def plurality(probabilities, predictions):
-    """Calculate the Plurality score for a mayor.
+def aggr_rank(probabilities, sc_functions):
+    """Aggregate probabilities and return a ranking.
 
     Keyword arguments:
         probabilities -- a list of instances' probabilities,
             i.e, [ [voter's 1 instances' probabilities],
                    [voter's 2 instances' probabilities],
                    [voter's 3 instances' probabilities] ... ]
-        predictions -- a list of instances' classes,
-            i.e, [ [voter's 1 instances' classes],
-                   [voter's 2 instances' classes],
-                   [voter's 3 instances' classes] ... ]
-
-
-    Score is calculated as the mean of class' probabilities.
+        sc_functions -- a list with the name of social choice functions
     """
-    # List of (instance, probabiliy mean) to be used as rank
-    ranking = list()
+    bbox = ballot_box(probabilities)
+    profile = Profile(bbox)
+    rankings = dict()
 
-    n_classifiers = len(probabilities)   # number of voters
-    n_instances = len(probabilities[0])  # number of mayors
+    for scf in sc_functions:
 
-    # For each instance in every classifier...
-    for i in range(n_instances):
-        # Class count -> {<class>: <counts>}
-        class_count = dict()
+        if scf == 'plurality':
+            rank = profile.plurality(probabilities)
+        elif scf == 'kemeny_young':
+            rank = profile.kemeny_young()
+        else:
+            rank = profile.ranking(eval('profile.' + scf))
 
-        # For each classifier...
-        for c in range(n_classifiers):
-            # Predicted class for instance i
-            p = predictions[c][i]
+        rankings[scf] = rank
 
-            # Update the number of times the class was chosen
-            class_count[p] = class_count.get(p, 0) + 1
-
-        # Rank classes
-        class_rank = sorted(class_count.items(), key=lambda x: x[1], reverse=True)
-
-        # IF THERE IS A TIE, I.E., WHEN TWO CLASSES HAVE THE SAME NUMBER OF VOTES???
-
-        # Most voted class for instance i
-        voted_class, n_votes = class_rank[0]
-
-        # Sum of most voted class' probabilities
-        sum_probabilities = 0
-
-        # For each classifier...
-        for c in range(n_classifiers):
-            # Predicted class for instance i
-            if predictions[c][i] == voted_class:
-                sum_probabilities += probabilities[c][i]
-
-        # Probability mean
-        prob_mean = sum_probabilities / n_votes
-
-        # Update ranking
-        ranking.append((i, prob_mean))
-
-    # Order ranking
-    ranking.sort(key=lambda x: x[1], reverse=True)
-
-    return ranking
-
+    return rankings
