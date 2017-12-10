@@ -465,8 +465,6 @@ class Profile():
             # Rank classes
             class_rank = sorted(class_count.items(), key=lambda x: x[1], reverse=True)
 
-            # IF THERE IS A TIE, I.E., WHEN TWO CLASSES HAVE THE SAME NUMBER OF VOTES???
-
             # Most voted class for instance i
             voted_class, n_votes = class_rank[0]
 
@@ -486,7 +484,7 @@ class Profile():
             ranking.append((i, prob_mean))
 
         # Order ranking
-        ranking.sort(key=lambda x: x[1], reverse=True)
+        ranking.sort(key=lambda x: x[0])
 
         return ranking
 
