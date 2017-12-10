@@ -2,7 +2,7 @@ import numpy
 import argparse
 
 from pandas import read_csv
-from social_choice.profile import Profile, ballot_box, plurality
+from social_choice.profile import Profile
 
 
 def main(args):
@@ -17,9 +17,9 @@ def main(args):
 	if args.function == 'plurality':
 		predictions = read_csv(args.predictions_filepath, sep=args.sep)  # get predicitons
 		predictions = numpy.array(predictions.T)						 # transpose
-		ranking = plurality(data, predictions)							 # get ranking
+		ranking = Profile.plurality(data, predictions)					 # get ranking
 	else:
-		profile = Profile(ballot_box(data))								 # create profile
+		profile = Profile.ballot_box(data)									 # create profile
 		if args.function == 'kemeny_young':
 			ranking = profile.kemeny_young()
 		else:
