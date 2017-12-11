@@ -41,12 +41,8 @@ from social_choice.profile import Profile, ballot_box, plurality
 
 ballots = [(2,1,56.78), (2,1,56.78), (2,1,56.78), (1,56.78,2), (1,56.78,2), (56.78,1,2), (56.78,1,2)]
 
-# Aggregate ballots
-# {(2, (0, 2, 1)), (3, (2, 0, 1)), (2, (1, 2, 0))}
-box = ballot_box(ballots)
-
 # Create a profile
-profile = Profile(box)
+profile = Profile.ballot_box(ballots)
 scorer = profile.borda  # function to calculate score for each mayor
 
 # A mayor list ranked by score
