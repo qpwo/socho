@@ -170,13 +170,24 @@ class Profile():
         # Return the minimum score in scores
         return min(scores)
 
-    def plurality(self, mayor):
-        """Calculate the Plurality score for a mayor.
+    # def plurality(self, mayor):
+    #     """Calculate the Plurality score for a mayor.
 
-        Keyword arguments:
-            mayor -- base mayor for scoring
-        """
-        return self.votes_per_mayor[0][mayor]
+    #     Keyword arguments:
+    #         mayor -- base mayor for scoring
+    #     """
+    #     n = len(self.mayors)
+
+    #     # Get mayors' votes by rank position
+    #     for i in range(n):
+    #         preference = [self.votes_per_mayor[i][mayor] >= self.votes_per_mayor[i][m]
+    #                     for m in self.mayors - {mayor}]
+
+    #         if all(preference):
+    #             return n - i
+
+    #     # Get the position with most votes
+    #     return -1
 
     def kemeny_young(self):
         """Kemeny-Young optimal rank aggregation.
