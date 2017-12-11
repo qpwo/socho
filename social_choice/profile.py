@@ -750,7 +750,7 @@ class Profile():
         return cls(set(pairs))
 
     @classmethod
-    def aggr_rank(cls, probabilities, sc_functions):
+    def aggr_rank(cls, probabilities, sc_functions, predictions=[]):
         """Aggregate probabilities and return a ranking.
 
         Keyword arguments:
@@ -759,6 +759,10 @@ class Profile():
                        [voter's 2 instances' probabilities],
                        [voter's 3 instances' probabilities] ... ]
             sc_functions -- a list with the name of social choice functions
+            predictions -- a list of instances' predictions (default []),
+                i.e, [ [voter's 1 instances' predictions],
+                       [voter's 2 instances' predictions],
+                       [voter's 3 instances' predictions] ... ]
         """
         profile = cls.ballot_box(probabilities)
         rankings = dict()
@@ -766,7 +770,7 @@ class Profile():
         for scf in sc_functions:
 
             if scf == 'plurality':
-                rank = profile.plurality(probabilities)
+                rank = profile.plurality(probabilities, predictions)
             elif scf == 'kemeny_young':
                 rank = profile.kemeny_young()
             else:
