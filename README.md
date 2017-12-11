@@ -59,7 +59,7 @@ rank = profile.ranking(scorer)
 # 2 as 3rd place
 ```
 
-## Line Command Usage
+## Command Line Usage
 ```bash
 usage: main.py [-h] -i INPUT_FILEPATH [-p PREDICTIONS_FILEPATH] [-s SEP] -f
                {borda,plurality,simpson,copeland,dowdall,symmetric_borda}
