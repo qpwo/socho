@@ -48,7 +48,7 @@ scorer = profile.borda  # function to calculate score for each mayor
 # A mayor list ranked by score
 # [(2, 10), (0, 7), (1, 4)]
 # maps to [(56.78, 10), (1, 7), (2, 4)]
-rank = profile.aggr_rank(scorer)
+rank = profile.ranking(scorer)
 
 # 56.78 is the winner
 # 1 as 2nd place
