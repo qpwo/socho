@@ -9,10 +9,13 @@ Rodrigo Augusto Scheller Boos, May 2017
 For more information:
 https://github.com/btrevizan/pySCF
 """
+import sys
 import math
 import copy
 import numpy
 from itertools import combinations, permutations
+
+sys.setrecursionlimit(1000000)
 
 
 class Profile():
