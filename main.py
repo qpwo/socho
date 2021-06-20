@@ -2,7 +2,7 @@ import numpy
 import argparse
 
 from pandas import read_csv
-from social_choice.profile import Profile
+from socho.profile import Profile
 
 
 def main(args):

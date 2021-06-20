@@ -7,7 +7,7 @@ Luke Miles, August 2016
 Rodrigo Augusto Scheller Boos, May 2017
 
 For more information:
-https://github.com/btrevizan/pySCF
+https://github.com/qpwo/socho
 """
 import sys
 import math

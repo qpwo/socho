@@ -1,6 +1,6 @@
-# pySCF
+# socho
 
-As in python Social Choice Function. `social_choice_functions.py` has the class
+As in python **So**cial **Cho**ice Function. `social_choice_functions.py` has the class
 `Profile`, as in a voting profile. Then there are methods to get the best
 candidate in a profile, or to get the score of an individual candidate.
 
@@ -37,7 +37,7 @@ $ pip3 install social-choice
 
 ## Getting Started
 ```python
-from social_choice.profile import Profile, ballot_box, plurality
+from socho.profile import Profile, ballot_box, plurality
 
 ballots = [(2,1,56.78), (2,1,56.78), (2,1,56.78), (1,56.78,2), (1,56.78,2), (56.78,1,2), (56.78,1,2)]
 
