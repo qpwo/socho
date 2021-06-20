@@ -6,7 +6,7 @@ from pandas import read_csv
 from socho.profile import Profile
 
 
-def main(args):
+def process_args(args):
 	data = read_csv(args.input_filepath, sep=args.sep)  # read the data file
 
 	mayors = data.axes[0]								# line labels (mayors)
@@ -83,7 +83,7 @@ def main(args):
 		print("{} errors of {}.".format(error_count, position_count-1))
 
 
-if __name__ == "__main__":
+def main():
 	parser = argparse.ArgumentParser()
 
 	#-input FILEPATH -f FUNCTION -o FILEPATH
@@ -118,4 +118,4 @@ if __name__ == "__main__":
 						help="Path to rank file to be compared.")
 
 	args = parser.parse_args()
-	main(args)
+	process_args(args)

@@ -60,7 +60,7 @@ rank = profile.ranking(scorer)
 ## Command Line Usage
 
 ```bash
-usage: python3 -m socho [-h] -i INPUT_FILEPATH [-p PREDICTIONS_FILEPATH] [-s SEP] -f
+usage: socho [-h] -i INPUT_FILEPATH [-p PREDICTIONS_FILEPATH] [-s SEP] -f
                {borda,plurality,simpson,copeland,dowdall,symmetric_borda}
                [-o OUTPUT_FILEPATH] [-c COMPARE_FILEPATH]
 
