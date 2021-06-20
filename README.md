@@ -1,6 +1,6 @@
 # socho
 
-As in python **So**cial **Cho**ice Function. `social_choice_functions.py` has the class
+As in python **So**cial **Cho**ice Function. The main export is the class
 `Profile`, as in a voting profile. Then there are methods to get the best
 candidate in a profile, or to get the score of an individual candidate.
 
@@ -31,11 +31,13 @@ set([56.78])
 ```
 
 ## Installation
+
 ```bash
 $ pip3 install social-choice
 ```
 
 ## Getting Started
+
 ```python
 from socho.profile import Profile, ballot_box, plurality
 
@@ -56,8 +58,9 @@ rank = profile.ranking(scorer)
 ```
 
 ## Command Line Usage
+
 ```bash
-usage: main.py [-h] -i INPUT_FILEPATH [-p PREDICTIONS_FILEPATH] [-s SEP] -f
+usage: python3 -m socho [-h] -i INPUT_FILEPATH [-p PREDICTIONS_FILEPATH] [-s SEP] -f
                {borda,plurality,simpson,copeland,dowdall,symmetric_borda}
                [-o OUTPUT_FILEPATH] [-c COMPARE_FILEPATH]
 
@@ -77,14 +80,17 @@ optional arguments:
 ```
 
 ### Example
+
 ```bash
-$ python3 main.py -i tests/input.txt -f borda -o tests/output.txt
+$ socho -i tests/input.txt -f borda -o tests/output.txt
 ```
 
 ### Test files
+
 Examples of input and output files are in `tests/` folder. Please follow the same structure.
 
 ## Methods
+
 - Baldwin -> winner
 - Borda -> ranking
 - Condorcet -> set of winners
@@ -102,4 +108,5 @@ Examples of input and output files are in `tests/` folder. Please follow the sam
 - Single Transferable Vote -> set of winners
 
 # Note
+
 The Kemeny Young method's complexity is O(n!). So, be careful with your input.
