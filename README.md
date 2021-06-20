@@ -33,7 +33,7 @@ set([56.78])
 ## Installation
 
 ```bash
-$ pip3 install social-choice
+$ pip3 install socho
 ```
 
 ## Getting Started
